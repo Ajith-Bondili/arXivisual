@@ -147,7 +147,7 @@ resource "azurerm_container_app" "api" {
       }
       env {
         name  = "AZURE_OPENAI_DEPLOYMENT"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
       env {
         name  = "STORAGE_MODE"
@@ -211,11 +211,11 @@ resource "azurerm_container_app" "api" {
       }
       env {
         name  = "VISUAL_QA_MODEL"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
       env {
         name  = "VISUAL_QA_REPAIR_MODEL"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
       # Admission control (see backend/api/throttle.py). A crawler ran ~250
       # new papers/day through the defaults in Sept 2026 by spoofing the
@@ -567,7 +567,7 @@ resource "azurerm_container_app" "worker" {
       }
       env {
         name  = "AZURE_OPENAI_DEPLOYMENT"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
       env {
         name  = "STORAGE_MODE"
@@ -611,7 +611,7 @@ resource "azurerm_container_app" "worker" {
       }
       env {
         name  = "VISUAL_QA_MODEL"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
       env {
         name        = "AZURE_OPENAI_API_KEY"
@@ -658,7 +658,7 @@ resource "azurerm_container_app" "worker" {
       }
       env {
         name  = "VISUAL_QA_REPAIR_MODEL"
-        value = "gpt-5-mini"
+        value = azurerm_cognitive_deployment.gpt_6_luna.name
       }
 
       # Appended after the two above for the same positional reason.

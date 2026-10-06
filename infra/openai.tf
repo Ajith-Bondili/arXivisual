@@ -1,4 +1,4 @@
-# Azure OpenAI account plus its three model deployments.
+# Azure OpenAI account plus its model deployments.
 resource "azurerm_cognitive_account" "openai" {
   name                = "arxivisual-openai"
   resource_group_name = azurerm_resource_group.main.name
@@ -10,7 +10,33 @@ resource "azurerm_cognitive_account" "openai" {
   public_network_access_enabled = true
 }
 
-# Main narration/scene-generation model.
+# Main text + visual-QA model. gpt-6-luna (GA, no access request; Chat
+# Completions, structured outputs, image input and reasoning_effort all
+# supported) replaces gpt-5-mini, which retires 2027-02-09, at a lower
+# per-token price. The apps reference this resource's name, so Terraform
+# creates the deployment before pointing any app at it.
+resource "azurerm_cognitive_deployment" "gpt_6_luna" {
+  name                 = "gpt-6-luna"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-6-luna"
+    version = "2026-09-22"
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = 250
+  }
+
+  rai_policy_name = "Microsoft.DefaultV2"
+  # Pin the version: an auto-upgrade could silently move to a pricier model.
+  version_upgrade_option = "NoAutoUpgrade"
+}
+
+# Previous main model, kept (no cost while idle) so rollback is an env change.
+# Retires 2027-02-09; delete after the gpt-6-luna cut-over has settled.
 resource "azurerm_cognitive_deployment" "gpt_5_mini" {
   name                 = "gpt-5-mini"
   cognitive_account_id = azurerm_cognitive_account.openai.id

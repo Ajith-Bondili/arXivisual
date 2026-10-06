@@ -1,4 +1,4 @@
-# Nightly LLM generation-quality evals — gates on regressions via
+# Weekly LLM generation-quality evals — gates on regressions via
 # backend/evals/check_regression.py (see backend/evals/README.md).
 #
 # Required repository secrets (Settings > Secrets and variables > Actions):
@@ -18,6 +18,10 @@ on:
         description: "Number of golden-set papers to evaluate"
         required: false
         default: "3"
+      deployment:
+        description: "Azure OpenAI deployment to evaluate (blank = AZURE_OPENAI_DEPLOYMENT secret)"
+        required: false
+        default: ""
 
 # Never overlap eval runs (they share the LLM quota); queue instead of cancel
 # so a manual dispatch doesn't kill a nightly run mid-flight.
@@ -37,7 +41,7 @@ jobs:
       LLM_PROVIDER: azure
       AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
       AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-      AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ github.event.inputs.deployment || secrets.AZURE_OPENAI_DEPLOYMENT }}
       # Cost control: cheapest reasoning tier is plenty for the eval workload.
       AZURE_OPENAI_REASONING_EFFORT: low
       # Evals measure the LLM gates, not ffmpeg: disables local render testing.
