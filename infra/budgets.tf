@@ -1,10 +1,13 @@
-# Subscription-scoped monthly cost budget ($300 in the billing currency) with
-# email alerts at 50% / 90% actual and 100% forecast.
+# Subscription-scoped monthly cost budget (575 in the billing currency, CAD)
+# with email alerts at 50% / 90% actual and 100% forecast. 575/month is the
+# average burn at which the Microsoft for Startups credits last until they
+# expire (~CA$12.6K left on 2026-10-01, valid to ~2028-07-29). $300 fired every
+# month, which hid real spikes.
 resource "azurerm_consumption_budget_subscription" "monthly" {
   name            = "arxivisual-monthly"
   subscription_id = "/subscriptions/${var.subscription_id}"
 
-  amount     = 300
+  amount     = 575
   time_grain = "Monthly"
 
   time_period {
