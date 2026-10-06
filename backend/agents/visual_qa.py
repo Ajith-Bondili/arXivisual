@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover - direct execution path
 
 logger = logging.getLogger(__name__)
 
-# Observe-mode switch and judge model (gpt-5-mini and gpt-5.6-sol both verified
+# Observe-mode switch and judge model (gpt-5-mini verified
 # to catch real overlap/cutoff/collision defects on production frames).
 VISUAL_QA_ENABLED = os.getenv("ENABLE_VISUAL_QA", "0") == "1"
 VISUAL_QA_MODEL = os.getenv("VISUAL_QA_MODEL", "gpt-5-mini")

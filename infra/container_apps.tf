@@ -126,10 +126,12 @@ resource "azurerm_container_app" "api" {
     max_replicas = 2
 
     container {
-      name   = "arxivisual-api"
-      image  = local.app_image
-      cpu    = 2.0
-      memory = "4Gi"
+      name  = "arxivisual-api"
+      image = local.app_image
+      # Renders run on arxivisual-worker; the API only renders on the rare
+      # Temporal-unavailable fallback, which 1 vCPU / 2Gi still handles.
+      cpu    = 1.0
+      memory = "2Gi"
 
       env {
         name  = "LLM_PROVIDER"
@@ -343,10 +345,12 @@ resource "azurerm_container_app" "temporal" {
     max_replicas = 1
 
     container {
-      name   = "arxivisual-temporal"
-      image  = "temporalio/auto-setup:1.23.1.1"
-      cpu    = 1.0
-      memory = "2Gi"
+      name  = "arxivisual-temporal"
+      image = "temporalio/auto-setup:1.23.1.1"
+      # Single-shard dev-style server; 1 vCPU / 2Gi was oversized for ~60
+      # papers/day. Back to 1.0/2Gi if it restarts with OOMKilled.
+      cpu    = 0.75
+      memory = "1.5Gi"
 
       env {
         name  = "DB"
@@ -525,14 +529,18 @@ resource "azurerm_container_app" "worker" {
     # the count of active jobs in OUR domain table is the truthful backlog
     # signal. One extra replica per ~2 active jobs, capped at 3 (each replica
     # is 2 vCPU; the render concurrency cap applies per replica).
-    min_replicas = 1
+    # Scales to zero when idle: KEDA wakes a replica as soon as a job row is
+    # queued (cold start ~1-3 min, small next to a multi-minute pipeline).
+    min_replicas = 0
     max_replicas = 3
 
     custom_scale_rule {
       name             = "active-jobs"
       custom_rule_type = "postgresql"
       metadata = {
-        query                      = "SELECT COUNT(*) FROM processing_jobs WHERE status IN ('queued','processing')"
+        # Only recent jobs count, so a row stuck in queued/processing
+        # cannot keep a replica awake forever now that min_replicas = 0.
+        query                      = "SELECT COUNT(*) FROM processing_jobs WHERE status IN ('queued','processing') AND created_at > (now() AT TIME ZONE 'UTC') - interval '4 hours'"
         targetQueryValue           = "2"
         activationTargetQueryValue = "0"
       }

@@ -18,7 +18,7 @@ directly. Infra changes go through `plan`/`apply` here, not ad-hoc `az`.
 |---|---|
 | `main.tf` | Resource group `arxivisual-rg` (eastus2) |
 | `registry.tf` | ACR `ca82c08e2eadacr` (Basic, admin enabled) + AcrPull role for the API app's system identity |
-| `openai.tf` | Azure OpenAI account `arxivisual-openai` + deployments `gpt-5-mini` (2025-08-07, GlobalStandard 250), `gpt-4o-mini-tts` (2025-12-15, GlobalStandard 50), `gpt-5.6-sol` (2026-07-09, GlobalStandard 250) |
+| `openai.tf` | Azure OpenAI account `arxivisual-openai` + deployments `gpt-5-mini` (2025-08-07, GlobalStandard 250), `gpt-4o-mini-tts` (2025-12-15, GlobalStandard 50) |
 | `database.tf` | Postgres flexible server `arxivisual-db` (**westus3**, B1ms, PG16, 32GB); databases `arxiviz`, `temporal`, `temporal_visibility`; `azure.extensions=BTREE_GIN`; allow-Azure-services firewall rule |
 | `container_apps.tf` | Log Analytics workspace, managed environment `arxivisual-api-env`, and the three backend apps: `arxivisual-api` (external HTTP :8000), `arxivisual-temporal` (internal TCP :7233), `arxivisual-worker` (no ingress) |
 | `insights.tf` | Application Insights `arxivisual-insights` (workspace-based, on the Log Analytics workspace above, type `web`, default retention). Its connection string is injected into `arxivisual-api` and `arxivisual-worker` as the `appinsights-connection-string` secret → `APPLICATIONINSIGHTS_CONNECTION_STRING`, with `OTEL_TRACES_SAMPLER=microsoft.fixed_percentage` + `OTEL_TRACES_SAMPLER_ARG=0.2` (20% of traces). Output `application_insights_app_id` |

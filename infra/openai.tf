@@ -49,23 +49,3 @@ resource "azurerm_cognitive_deployment" "gpt_4o_mini_tts" {
   rai_policy_name        = "Microsoft.DefaultV2"
   version_upgrade_option = "OnceNewDefaultVersionAvailable"
 }
-
-# Visual QA model (VISUAL_QA_MODEL env var in the API/worker apps).
-resource "azurerm_cognitive_deployment" "gpt_5_6_sol" {
-  name                 = "gpt-5.6-sol"
-  cognitive_account_id = azurerm_cognitive_account.openai.id
-
-  model {
-    format  = "OpenAI"
-    name    = "gpt-5.6-sol"
-    version = "2026-07-09"
-  }
-
-  sku {
-    name     = "GlobalStandard"
-    capacity = 250
-  }
-
-  rai_policy_name        = "Microsoft.DefaultV2"
-  version_upgrade_option = "OnceNewDefaultVersionAvailable"
-}
