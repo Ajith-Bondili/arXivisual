@@ -118,7 +118,7 @@ variable "web_custom_domains_enabled" {
 # ---------------------------------------------------------------------------
 
 variable "contact_email" {
-  description = "Address that receives budget notifications (budgets.tf) and every Azure Monitor alert (the arxivisual-alerts action group in alerts.tf)."
+  description = "Address that receives every Azure Monitor alert (the arxivisual-alerts action group in alerts.tf). Budget emails are set in budgets.tf."
   type        = string
   default     = "ajithbon05@gmail.com"
 }

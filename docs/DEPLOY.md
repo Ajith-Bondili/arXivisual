@@ -34,7 +34,7 @@ az containerapp update \
   --image ca82c08e2eadacr.azurecr.io/arxivisual-api:<tag>
 ```
 
-This creates a new revision and shifts traffic to it. The app runs a single always-on replica; a paper job's Manim renders are CPU-bound, so the replica is sized accordingly (2 vCPU / 4 Gi).
+This creates a new revision and shifts traffic to it. The API runs a single always-on replica at 1 vCPU / 2 Gi. Paper jobs (and their CPU-bound Manim renders) run on `arxivisual-worker` (2 vCPU / 4 Gi, scales to zero when idle); the API renders only on the Temporal-unavailable fallback, one scene at a time (`RENDER_CONCURRENCY=1`).
 
 ### 3. Verify
 
@@ -52,7 +52,7 @@ Set these on the Container App (secrets referenced via `secretref:`; the rest as
 |----------|-----------------|
 | `AZURE_OPENAI_ENDPOINT` | Azure OpenAI resource endpoint (LLM + TTS both route through it) |
 | `AZURE_OPENAI_API_KEY` | **secret** — API key for the resource |
-| `AZURE_OPENAI_DEPLOYMENT` | Deployment name of the pipeline model (production uses `gpt-5-mini`; code defaults to `gpt-5`) |
+| `AZURE_OPENAI_DEPLOYMENT` | Deployment name of the pipeline model (production uses `gpt-6-luna`; code defaults to `gpt-5`) |
 | `AZURE_OPENAI_REASONING_EFFORT` | `minimal` \| `low` \| `medium` \| `high`; reasoning tokens dominate output cost, so this is the main cost lever |
 | `DATABASE_URL` | **secret** — Postgres flexible server URL, `postgresql://...?ssl=require`. Unset falls back to ephemeral SQLite, which is wiped on every redeploy |
 | `STORAGE_MODE` | `r2` — videos go to Cloudflare R2 instead of the container filesystem |

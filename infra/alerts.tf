@@ -6,15 +6,15 @@
 #   - one action group that emails var.contact_email;
 #   - metric alerts on the Postgres server and the three backend Container
 #     Apps (billed per monitored time series, cents per month each);
-#   - three log alerts on the existing Log Analytics workspace, evaluated every
+#   - four log alerts on the existing Log Analytics workspace, evaluated every
 #     15 minutes (~0.50 USD/month per rule), except worker-errors at 5 minutes
 #     (~1.50 USD/month) so Azure Monitor reliably bills over $1/month: it is
 #     the 5th workload toward the Microsoft for Startups $25K credit milestone
 #     (5+ services at >= $1 each for 60 days). Keep it above $1 until the
 #     credit lands.
 #
-# No availability web tests (they are billed per test): outside-in uptime
-# probing is a scheduled GitHub Actions workflow instead.
+# No availability web tests (they are billed per test) and no outside-in
+# uptime probe yet.
 #
 # Metric names and namespaces were checked against the live metric definitions
 # (az monitor metrics list-definitions) and the Azure Monitor supported-metrics
@@ -276,6 +276,39 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "worker_errors" {
     operator                = "GreaterThan"
     threshold               = var.alert_worker_error_count
 
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+
+  action {
+    action_groups = [azurerm_monitor_action_group.main.id]
+  }
+}
+
+# The worker scales to zero and only KEDA's postgresql rule wakes it, so a
+# broken scaler is otherwise silent: the API still accepts papers (routes.py
+# logs "Accepted new paper"), Temporal queues them, and nothing runs until the
+# 2h reaper fails them. Fires when a paper accepted 15-30 minutes ago has not
+# produced a single worker log line in the last 30 minutes.
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "worker_not_waking" {
+  name                = "arxivisual-worker-not-waking"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_log_analytics_workspace.main.location
+  scopes              = [azurerm_log_analytics_workspace.main.id]
+  description         = "The API accepted a new paper 15-30 minutes ago but arxivisual-worker (min_replicas = 0) logged nothing in 30 minutes: the KEDA postgresql scale rule is not waking it. Check ContainerAppSystemLogs_CL (EventSource KEDA) for arxivisual-worker."
+  severity            = 1
+
+  evaluation_frequency    = "PT15M"
+  window_duration         = "PT30M"
+  auto_mitigation_enabled = true
+
+  criteria {
+    query                   = "ContainerAppConsoleLogs_CL | where ContainerAppName_s in ('arxivisual-api','arxivisual-worker') | summarize accepted = countif(ContainerAppName_s == 'arxivisual-api' and Log_s has 'Accepted new paper' and TimeGenerated < ago(15m)), worker = countif(ContainerAppName_s == 'arxivisual-worker') | where accepted > 0 and worker == 0"
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
     failing_periods {
       minimum_failing_periods_to_trigger_alert = 1
       number_of_evaluation_periods             = 1

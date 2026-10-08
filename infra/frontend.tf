@@ -89,9 +89,9 @@ resource "azurerm_container_app" "web" {
     # per-paper metadata fetch; videos come straight from R2. Marginal cost
     # at eastus2 list prices: ~$6/mo idle to ~$20/mo fully active (the
     # subscription's free grant is already consumed by the backend apps).
-    # arxivisual.org is still served by Vercel; this app takes no production
-    # traffic yet, so let it scale to zero. Set back to 1 at the DNS cut-over.
-    min_replicas = 0
+    # arxivisual.org is still served by Vercel, so until the custom domains
+    # are bound this app takes no production traffic and scales to zero.
+    min_replicas = var.web_custom_domains_enabled ? 1 : 0
     max_replicas = 3
 
     http_scale_rule {

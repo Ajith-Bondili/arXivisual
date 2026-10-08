@@ -4,7 +4,6 @@
 # Required repository secrets (Settings > Secrets and variables > Actions):
 #   AZURE_OPENAI_API_KEY      — Azure OpenAI key used by the agent pipeline
 #   AZURE_OPENAI_ENDPOINT     — e.g. https://<resource>.openai.azure.com
-#   AZURE_OPENAI_DEPLOYMENT   — deployment name (e.g. gpt-5-mini)
 # The run makes real, billable LLM calls (~$0.05–0.15 per paper without
 # rendering); paper count and per-paper viz cap keep cost bounded.
 name: Evals
@@ -19,7 +18,7 @@ on:
         required: false
         default: "3"
       deployment:
-        description: "Azure OpenAI deployment to evaluate (blank = AZURE_OPENAI_DEPLOYMENT secret)"
+        description: "Azure OpenAI deployment to evaluate (blank = gpt-6-luna, the production model)"
         required: false
         default: ""
 
@@ -41,7 +40,7 @@ jobs:
       LLM_PROVIDER: azure
       AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
       AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-      AZURE_OPENAI_DEPLOYMENT: ${{ github.event.inputs.deployment || secrets.AZURE_OPENAI_DEPLOYMENT }}
+      AZURE_OPENAI_DEPLOYMENT: ${{ github.event.inputs.deployment || 'gpt-6-luna' }}
       # Cost control: cheapest reasoning tier is plenty for the eval workload.
       AZURE_OPENAI_REASONING_EFFORT: low
       # Evals measure the LLM gates, not ffmpeg: disables local render testing.

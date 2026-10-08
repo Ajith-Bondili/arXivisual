@@ -129,8 +129,10 @@ resource "azurerm_container_app" "api" {
     container {
       name  = "arxivisual-api"
       image = local.app_image
-      # Renders run on arxivisual-worker; the API only renders on the rare
-      # Temporal-unavailable fallback, which 1 vCPU / 2Gi still handles.
+      # Renders run on arxivisual-worker. The API only renders on the
+      # Temporal-unavailable fallback (api/routes.py), which ran 2-11 times a
+      # day in early Sept 2026; RENDER_CONCURRENCY=1 below keeps one fallback
+      # render at a time so it fits in 1 vCPU / 2Gi beside the web server.
       cpu    = 1.0
       memory = "2Gi"
 
@@ -308,6 +310,13 @@ resource "azurerm_container_app" "api" {
           name  = "POSTHOG_HOST"
           value = var.posthog_host
         }
+      }
+      # Last on purpose (the provider diffs env blocks by position). Only the
+      # in-process fallback (jobs/worker.py) reads it on the API; the worker
+      # keeps its own RENDER_CONCURRENCY=3.
+      env {
+        name  = "RENDER_CONCURRENCY"
+        value = "1"
       }
     }
   }

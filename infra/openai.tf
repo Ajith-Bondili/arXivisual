@@ -31,8 +31,9 @@ resource "azurerm_cognitive_deployment" "gpt_6_luna" {
   }
 
   rai_policy_name = "Microsoft.DefaultV2"
-  # Pin the version: an auto-upgrade could silently move to a pricier model.
-  version_upgrade_option = "NoAutoUpgrade"
+  # Stay on 2026-09-22 until that version retires, then upgrade instead of
+  # failing every call (NoAutoUpgrade would stop the pipeline at retirement).
+  version_upgrade_option = "OnceCurrentVersionExpired"
 }
 
 # Previous main model, kept (no cost while idle) so rollback is an env change.
